@@ -44,6 +44,33 @@ export default function RegisterPage() {
       return
     }
 
+    if (data.user) {
+      // Intentar crear perfil con delay para esperar trigger
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // Verificar si el perfil ya existe
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', data.user.id)
+        .single()
+
+      if (!existingProfile) {
+        // Si no existe, crear manualmente
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: data.user.id,
+            full_name: fullName,
+            role: 'vendedor',
+          })
+
+        if (profileError) {
+          console.error('Profile error:', profileError)
+        }
+      }
+    }
+
     setSuccess(true)
     setLoading(false)
   }

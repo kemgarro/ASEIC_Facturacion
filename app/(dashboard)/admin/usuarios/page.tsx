@@ -46,6 +46,24 @@ export default function CreateUserPage() {
       return
     }
 
+    if (data.user) {
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', data.user.id)
+        .single()
+
+      if (!existingProfile) {
+        await supabase.from('profiles').insert({
+          id: data.user.id,
+          full_name: fullName,
+          role: role,
+        })
+      }
+    }
+
     setSuccess(true)
     setLoading(false)
   }
