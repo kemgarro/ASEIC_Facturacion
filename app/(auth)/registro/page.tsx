@@ -35,7 +35,11 @@ export default function RegisterPage() {
     })
 
     if (signUpError) {
-      setError(signUpError.message)
+      if (signUpError.message.includes('duplicate') || signUpError.message.includes('already')) {
+        setError('Este correo ya está registrado')
+      } else {
+        setError(signUpError.message)
+      }
       setLoading(false)
       return
     }
@@ -51,6 +55,9 @@ export default function RegisterPage() {
 
       if (profileError) {
         console.error('Error creating profile:', profileError)
+        setError('Usuario creado pero error al guardar perfil. Contacta al administrador.')
+        setLoading(false)
+        return
       }
     }
 
