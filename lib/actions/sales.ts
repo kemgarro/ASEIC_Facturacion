@@ -42,12 +42,35 @@ export async function createSale(
   const { error: itemsError } = await supabase.from('sale_items').insert(saleItems)
   if (itemsError) return { success: false, error: itemsError.message }
 
-  // Descontar stock uno por uno (sin RPC por ahora)
+  // Validar stock disponible antes de descontar
+  const productIds = items.map(i => i.id)
+  const { data: products } = await supabase
+    .from('products')
+    .select('id, stock')
+    .in('id', productIds)
+
+  if (!products) return { success: false, error: 'Error al verificar stock' }
+
   for (const item of items) {
-    await supabase
+    const product = products.find(p => p.id === item.id)
+    if (!product || product.stock < item.quantity) {
+      return { success: false, error: `Stock insuficiente para: ${item.name}` }
+    }
+  }
+
+  // Descontar stock en lote
+  const stockUpdates = items.map(item => ({
+    id: item.id,
+    stock: item.stock - item.quantity
+  }))
+
+  for (const update of stockUpdates) {
+    const { error: stockError } = await supabase
       .from('products')
-      .update({ stock: item.stock - item.quantity })
-      .eq('id', item.id)
+      .update({ stock: update.stock })
+      .eq('id', update.id)
+
+    if (stockError) return { success: false, error: `Error al atualizar stock: ${stockError.message}` }
   }
 
   revalidatePath('/ventas')
