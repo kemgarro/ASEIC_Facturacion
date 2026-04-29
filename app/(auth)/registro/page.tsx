@@ -44,23 +44,6 @@ export default function RegisterPage() {
       return
     }
 
-    if (data.user) {
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: data.user.id,
-          full_name: fullName,
-          role: 'vendedor',
-        })
-
-      if (profileError) {
-        console.error('Error creating profile:', profileError)
-        setError('Usuario creado pero error al guardar perfil. Contacta al administrador.')
-        setLoading(false)
-        return
-      }
-    }
-
     setSuccess(true)
     setLoading(false)
   }
@@ -84,17 +67,20 @@ export default function RegisterPage() {
               </svg>
             </div>
             <h2 className="text-2xl font-bold mb-4" style={{ color: '#023e55' }}>
-              Verifica tu correo
+              ¡Usuario creado!
             </h2>
-            <p className="text-gray-600 mb-6">
-              Hemos enviado un correo de confirmación a <strong>{email}</strong>. Por favor, verifica tu bandeja de entrada.
+            <p className="text-gray-600 mb-2">
+              La cuenta para <strong>{email}</strong> ha sido creada.
+            </p>
+            <p className="text-gray-500 text-sm mb-6">
+              Ya podés iniciar sesión.
             </p>
             <Button
               asChild
               className="w-full h-12 text-base font-semibold rounded-xl"
               style={{ backgroundColor: '#2ba5b2', color: 'white' }}
             >
-              <Link href="/login">Volver al login</Link>
+              <Link href="/login">Ir a iniciar sesión</Link>
             </Button>
           </div>
         </div>
