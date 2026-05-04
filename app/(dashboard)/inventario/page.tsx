@@ -42,7 +42,7 @@ export default async function InventarioPage() {
             {entries.map((e) => (
               <TableRow key={e.id} className="hover:bg-gray-50 transition-colors">
                 <TableCell className="font-semibold text-base" style={{ color: '#023e55' }}>
-                  {(e.products as { name: string } | null)?.name ?? '—'}
+                  {((e.products as unknown) as { name: string }[] | null)?.[0]?.name ?? '—'}
                 </TableCell>
                 <TableCell className="text-right text-base font-bold" style={{ color: '#2ba5b2' }}>
                   +{e.quantity}
@@ -53,7 +53,7 @@ export default async function InventarioPage() {
                 <TableCell className="text-base text-gray-600">{e.supplier ?? '—'}</TableCell>
                 <TableCell className="text-base text-gray-500 max-w-[180px] truncate">{e.notes ?? '—'}</TableCell>
                 <TableCell className="text-base text-gray-600">
-                  {(e.profiles as { full_name: string } | null)?.full_name ?? '—'}
+                  {((e.profiles as unknown) as { full_name: string }[] | null)?.[0]?.full_name ?? '—'}
                 </TableCell>
                 <TableCell className="text-base text-gray-500">
                   {new Date(e.created_at).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}
