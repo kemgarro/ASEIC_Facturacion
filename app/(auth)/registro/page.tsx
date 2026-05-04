@@ -16,6 +16,8 @@ export default function RegisterPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [resendLoading, setResendLoading] = useState(false)
+  const [resendMessage, setResendMessage] = useState('')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -75,6 +77,15 @@ export default function RegisterPage() {
     setLoading(false)
   }
 
+  async function handleResend() {
+    setResendLoading(true)
+    setResendMessage('')
+    const supabase = createClient()
+    const { error } = await supabase.auth.resend({ type: 'signup', email })
+    setResendMessage(error ? 'No se pudo reenviar. Intenta de nuevo.' : 'Correo reenviado. Revisa tu bandeja.')
+    setResendLoading(false)
+  }
+
   if (success) {
     return (
       <div
@@ -94,14 +105,31 @@ export default function RegisterPage() {
               </svg>
             </div>
             <h2 className="text-2xl font-bold mb-4" style={{ color: '#023e55' }}>
-              ¡Usuario creado!
+              ¡Cuenta creada!
             </h2>
             <p className="text-gray-600 mb-2">
-              La cuenta para <strong>{email}</strong> ha sido creada.
+              Se envió un correo de verificación a <strong>{email}</strong>.
             </p>
-            <p className="text-gray-500 text-sm mb-6">
-              Ya podés iniciar sesión.
-            </p>
+            <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg text-sm mb-6 text-left">
+              Debes confirmar tu correo antes de iniciar sesión. Revisa también la carpeta de spam.
+            </div>
+
+            {resendMessage && (
+              <div className={`px-4 py-3 rounded-lg text-sm mb-4 ${resendMessage.includes('reenviado') ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-red-50 border border-red-200 text-red-700'}`}>
+                {resendMessage}
+              </div>
+            )}
+
+            <Button
+              type="button"
+              onClick={handleResend}
+              disabled={resendLoading}
+              className="w-full h-12 text-base font-semibold rounded-xl mb-3"
+              style={{ backgroundColor: '#3b4e73', color: 'white' }}
+            >
+              {resendLoading ? 'Reenviando...' : 'Reenviar correo de verificación'}
+            </Button>
+
             <Button
               asChild
               className="w-full h-12 text-base font-semibold rounded-xl"
