@@ -2,35 +2,44 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
-export default function LoginPage() {
+export default function ActualizarContrasenaPage() {
   const router = useRouter()
-  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setLoading(true)
     setError('')
 
+    if (password !== confirm) {
+      setError('Las contraseñas no coinciden.')
+      return
+    }
+
+    if (password.length < 6) {
+      setError('La contraseña debe tener al menos 6 caracteres.')
+      return
+    }
+
+    setLoading(true)
+
     const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { error } = await supabase.auth.updateUser({ password })
 
     if (error) {
-      setError('Correo o contraseña incorrectos')
+      setError('No se pudo actualizar la contraseña. Intenta de nuevo.')
       setLoading(false)
       return
     }
 
-    router.push('/')
-    router.refresh()
+    router.push('/login')
   }
 
   return (
@@ -45,29 +54,17 @@ export default function LoginPage() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-2xl p-8">
-          <h2 className="text-2xl font-bold mb-6" style={{ color: '#023e55' }}>
-            Iniciar sesión
+          <h2 className="text-2xl font-bold mb-2" style={{ color: '#023e55' }}>
+            Nueva contraseña
           </h2>
+          <p className="text-gray-500 text-sm mb-6">
+            Ingresa y confirma tu nueva contraseña.
+          </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-base font-medium" style={{ color: '#3b4e73' }}>
-                Correo electrónico
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="usuario@empresa.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="h-12 text-base"
-              />
-            </div>
-
-            <div className="space-y-2">
               <Label htmlFor="password" className="text-base font-medium" style={{ color: '#3b4e73' }}>
-                Contraseña
+                Nueva contraseña
               </Label>
               <Input
                 id="password"
@@ -75,6 +72,21 @@ export default function LoginPage() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                required
+                className="h-12 text-base"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirm" className="text-base font-medium" style={{ color: '#3b4e73' }}>
+                Confirmar contraseña
+              </Label>
+              <Input
+                id="confirm"
+                type="password"
+                placeholder="••••••••"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
                 required
                 className="h-12 text-base"
               />
@@ -92,28 +104,9 @@ export default function LoginPage() {
               style={{ backgroundColor: '#2ba5b2', color: 'white' }}
               disabled={loading}
             >
-              {loading ? 'Ingresando...' : 'Ingresar'}
+              {loading ? 'Actualizando...' : 'Actualizar contraseña'}
             </Button>
           </form>
-
-          <div className="mt-4 text-center">
-            <Link
-              href="/olvide-contrasena"
-              className="text-sm font-medium"
-              style={{ color: '#2ba5b2' }}
-            >
-              ¿Olvidaste tu contraseña?
-            </Link>
-          </div>
-
-          <div className="mt-4 text-center">
-            <p className="text-base text-gray-600">
-              ¿No tienes cuenta?{' '}
-              <Link href="/registro" className="font-semibold" style={{ color: '#2ba5b2' }}>
-                Crear cuenta
-              </Link>
-            </p>
-          </div>
         </div>
       </div>
     </div>
