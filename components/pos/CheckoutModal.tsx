@@ -12,9 +12,17 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { ShoppingCart, CheckCircle2 } from 'lucide-react'
+import type { Promotion } from '@/lib/actions/promotions'
 
-export default function CheckoutModal() {
-  const { items, total, clearCart } = useCartStore()
+interface CheckoutModalProps {
+  promotions?: Promotion[]
+}
+
+export default function CheckoutModal({ promotions = [] }: CheckoutModalProps) {
+  const { items, total, discountedTotal, getAppliedDiscounts, clearCart } = useCartStore()
+  const finalTotal = discountedTotal(promotions)
+  const rawTotal = total()
+  const discounts = getAppliedDiscounts(promotions)
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
@@ -23,7 +31,7 @@ export default function CheckoutModal() {
   async function handleConfirm() {
     setLoading(true)
     setError('')
-    const result = await createSale(items)
+    const result = await createSale(items, null, finalTotal)
     setLoading(false)
 
     if (!result.success) {
@@ -49,7 +57,7 @@ export default function CheckoutModal() {
           style={{ backgroundColor: '#f7af02', color: '#023e55' }}
         >
           <ShoppingCart className="h-5 w-5 mr-2" />
-          Cobrar ₡{total().toFixed(2)}
+          Cobrar ₡{finalTotal.toFixed(2)}
         </Button>
       </DialogTrigger>
 
@@ -83,9 +91,25 @@ export default function CheckoutModal() {
                   </span>
                 </div>
               ))}
+              {discounts.length > 0 && (
+                <>
+                  <div className="pt-2" style={{ borderTop: '1px solid #d0dde2' }}>
+                    {discounts.map((d) => (
+                      <div key={d.promotionId} className="flex justify-between text-sm text-green-700">
+                        <span className="truncate flex-1 mr-2">🏷 {d.promotionName}</span>
+                        <span className="font-semibold shrink-0">-₡{d.amount.toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex justify-between text-sm text-gray-500">
+                    <span>Subtotal</span>
+                    <span>₡{rawTotal.toFixed(2)}</span>
+                  </div>
+                </>
+              )}
               <div className="flex justify-between text-lg font-bold pt-2" style={{ borderTop: '1px solid #d0dde2' }}>
                 <span style={{ color: '#023e55' }}>Total</span>
-                <span style={{ color: '#023e55' }}>₡{total().toFixed(2)}</span>
+                <span style={{ color: '#023e55' }}>₡{finalTotal.toFixed(2)}</span>
               </div>
             </div>
 

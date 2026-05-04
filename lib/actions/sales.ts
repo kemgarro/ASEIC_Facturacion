@@ -8,7 +8,8 @@ export type SaleResult = { success: true; saleId: number } | { success: false; e
 
 export async function createSale(
   items: CartItem[],
-  customerId?: number | null
+  customerId?: number | null,
+  overrideTotal?: number
 ): Promise<SaleResult> {
   if (items.length === 0) return { success: false, error: 'Carrito vacío' }
 
@@ -16,7 +17,15 @@ export async function createSale(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { success: false, error: 'No autenticado' }
 
-  const total = items.reduce((sum, i) => sum + i.price * i.quantity, 0)
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile) return { success: false, error: 'Perfil no encontrado' }
+
+  const total = overrideTotal ?? items.reduce((sum, i) => sum + i.price * i.quantity, 0)
 
   const { data: sale, error: saleError } = await supabase
     .from('sales')

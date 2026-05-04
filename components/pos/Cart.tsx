@@ -3,9 +3,17 @@
 import { useCartStore } from '@/lib/store/cart'
 import { Trash2, Minus, Plus, ShoppingBag } from 'lucide-react'
 import CheckoutModal from './CheckoutModal'
+import type { Promotion } from '@/lib/actions/promotions'
 
-export default function Cart() {
-  const { items, removeItem, updateQty, total } = useCartStore()
+interface CartProps {
+  promotions?: Promotion[]
+}
+
+export default function Cart({ promotions = [] }: CartProps) {
+  const { items, removeItem, updateQty, total, getAppliedDiscounts, discountedTotal } = useCartStore()
+  const discounts = getAppliedDiscounts(promotions)
+  const finalTotal = discountedTotal(promotions)
+  const rawTotal = total()
 
   if (items.length === 0) {
     return (
@@ -67,11 +75,25 @@ export default function Cart() {
       </div>
 
       <div className="mt-4 pt-4" style={{ borderTop: '2px solid #eef4f6' }}>
+        {discounts.length > 0 && (
+          <div className="mb-3 space-y-1">
+            {discounts.map((d) => (
+              <div key={d.promotionId} className="flex justify-between text-sm">
+                <span className="text-green-700 font-medium truncate flex-1 mr-2">🏷 {d.promotionName}</span>
+                <span className="text-green-700 font-semibold shrink-0">-₡{d.amount.toFixed(2)}</span>
+              </div>
+            ))}
+            <div className="flex justify-between text-sm text-gray-400 pt-1" style={{ borderTop: '1px solid #eef4f6' }}>
+              <span>Subtotal</span>
+              <span>₡{rawTotal.toFixed(2)}</span>
+            </div>
+          </div>
+        )}
         <div className="flex justify-between items-center mb-4">
           <span className="text-lg font-semibold" style={{ color: '#3b4e73' }}>Total</span>
-          <span className="text-2xl font-bold" style={{ color: '#023e55' }}>₡{total().toFixed(2)}</span>
+          <span className="text-2xl font-bold" style={{ color: '#023e55' }}>₡{finalTotal.toFixed(2)}</span>
         </div>
-        <CheckoutModal />
+        <CheckoutModal promotions={promotions} />
       </div>
     </div>
   )
