@@ -35,7 +35,7 @@ export default async function ProductosPage() {
         </Button>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow style={{ backgroundColor: '#023e55' }}>

@@ -25,9 +25,9 @@ export default function Header({ userName, userRole }: HeaderProps) {
       className="h-16 flex items-center justify-end px-6 gap-4 border-b border-white/10"
       style={{ backgroundColor: '#3b4e73' }}
     >
-      <div className="flex items-center gap-2 text-sm text-white/80">
-        <User className="h-4 w-4" />
-        <span className="font-medium text-white">{userName}</span>
+      <div className="flex items-center gap-2 text-sm text-white/80 min-w-0">
+        <User className="h-4 w-4 shrink-0" />
+        <span className="font-medium text-white truncate max-w-[100px] sm:max-w-none">{userName}</span>
         <span
           className="px-2 py-0.5 rounded text-xs font-semibold capitalize"
           style={{ backgroundColor: '#2ba5b2', color: 'white' }}

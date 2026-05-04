@@ -21,7 +21,7 @@ export default async function HistorialPage() {
     <div className="space-y-6">
       <h1 className="text-3xl font-bold" style={{ color: '#023e55' }}>Historial de Ventas</h1>
 
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow style={{ backgroundColor: '#023e55' }}>

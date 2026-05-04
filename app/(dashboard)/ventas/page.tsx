@@ -20,15 +20,15 @@ export default async function VentasPage() {
     .order('name')
 
   return (
-    <div className="flex gap-6 h-full">
-      <div className="flex-1 overflow-y-auto">
-        <h1 className="text-3xl font-bold mb-5" style={{ color: '#023e55' }}>Nueva Venta</h1>
+    <div className="flex flex-col lg:flex-row gap-5 h-full">
+      <div className="flex-1 min-w-0 overflow-y-auto">
+        <h1 className="text-2xl md:text-3xl font-bold mb-5" style={{ color: '#023e55' }}>Nueva Venta</h1>
         <ProductGrid products={(products ?? []) as ProductRow[]} />
       </div>
 
       <div
-        className="rounded-2xl shadow-sm p-5 flex flex-col border-t-4"
-        style={{ backgroundColor: 'white', borderTopColor: '#2ba5b2', minWidth: '320px', width: '340px' }}
+        className="rounded-2xl shadow-sm p-5 flex flex-col border-t-4 w-full lg:w-80 lg:shrink-0"
+        style={{ backgroundColor: 'white', borderTopColor: '#2ba5b2' }}
       >
         <Cart />
       </div>

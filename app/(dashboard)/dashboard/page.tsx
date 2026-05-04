@@ -26,7 +26,7 @@ export default async function DashboardPage() {
               <ShoppingCart className="h-5 w-5" style={{ color: '#2ba5b2' }} />
             </div>
           </div>
-          <p className="text-4xl font-bold mb-1" style={{ color: '#023e55' }}>{ventasHoy?.length ?? 0}</p>
+          <p className="text-3xl md:text-4xl font-bold mb-1" style={{ color: '#023e55' }}>{ventasHoy?.length ?? 0}</p>
           <p className="text-base text-gray-500">Total: <span className="font-semibold" style={{ color: '#2ba5b2' }}>₡{totalHoy.toFixed(2)}</span></p>
         </div>
 
@@ -37,7 +37,7 @@ export default async function DashboardPage() {
               <TrendingUp className="h-5 w-5" style={{ color: '#f7af02' }} />
             </div>
           </div>
-          <p className="text-4xl font-bold mb-1" style={{ color: '#023e55' }}>₡{totalGeneral.toFixed(2)}</p>
+          <p className="text-3xl md:text-4xl font-bold mb-1" style={{ color: '#023e55' }}>₡{totalGeneral.toFixed(2)}</p>
           <p className="text-base text-gray-500">Acumulado total</p>
         </div>
 
@@ -48,7 +48,7 @@ export default async function DashboardPage() {
               <AlertTriangle className="h-5 w-5" style={{ color: '#f7af02' }} />
             </div>
           </div>
-          <p className="text-4xl font-bold mb-1" style={{ color: stockBajo?.length ? '#f7af02' : '#023e55' }}>
+          <p className="text-3xl md:text-4xl font-bold mb-1" style={{ color: stockBajo?.length ? '#f7af02' : '#023e55' }}>
             {stockBajo?.length ?? 0}
           </p>
           <p className="text-base text-gray-500">productos &lt;5 unidades</p>
