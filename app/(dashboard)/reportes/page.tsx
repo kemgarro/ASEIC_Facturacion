@@ -1,13 +1,26 @@
 import { getSalesReport, getStockReport } from '@/lib/actions/reports'
+import { getAuditLog } from '@/lib/actions/audit'
 import { Button } from '@/components/ui/button'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import { BarChart3, Package, TrendingUp, ShoppingBag, Receipt } from 'lucide-react'
+import Link from 'next/link'
 import ExportButton from './ExportButton'
 
 interface PageProps {
   searchParams: Promise<{ from?: string; to?: string; tab?: string }>
+}
+
+const AUDIT_TYPE_LABELS: Record<string, string> = {
+  venta: 'Venta', anulacion: 'Anulación', inventario: 'Inventario', perdida: 'Pérdida', caja: 'Caja',
+}
+const AUDIT_TYPE_COLORS: Record<string, { bg: string; color: string }> = {
+  venta: { bg: '#dcfce7', color: '#16a34a' },
+  anulacion: { bg: '#fee2e2', color: '#dc2626' },
+  inventario: { bg: '#dbeafe', color: '#2563eb' },
+  perdida: { bg: '#fef3c7', color: '#d97706' },
+  caja: { bg: '#f3e8ff', color: '#7c3aed' },
 }
 
 function getDefaultDates() {
@@ -24,9 +37,10 @@ export default async function ReportesPage({ searchParams }: PageProps) {
   const dateTo = to ?? today
   const activeTab = tab ?? 'ventas'
 
-  const [salesReport, stockReport] = await Promise.all([
+  const [salesReport, stockReport, auditEntries] = await Promise.all([
     getSalesReport(dateFrom, dateTo),
     getStockReport(),
+    activeTab === 'auditoria' ? getAuditLog({ dateFrom, dateTo }) : Promise.resolve([]),
   ])
 
   return (
@@ -67,6 +81,7 @@ export default async function ReportesPage({ searchParams }: PageProps) {
         {[
           { key: 'ventas', label: 'Ventas', icon: BarChart3 },
           { key: 'stock', label: 'Stock', icon: Package },
+          { key: 'auditoria', label: 'Auditoría', icon: Receipt },
         ].map(({ key, label, icon: Icon }) => (
           <a
             key={key}
@@ -230,6 +245,55 @@ export default async function ReportesPage({ searchParams }: PageProps) {
                     </TableCell>
                   </TableRow>
                 ))}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'auditoria' && (
+        <div className="space-y-4">
+          <p className="text-sm text-gray-500">{auditEntries.length} registro(s) en el período</p>
+          <div className="bg-white rounded-2xl shadow-sm overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow style={{ backgroundColor: '#023e55' }}>
+                  <TableHead className="text-white font-semibold py-4">Tipo</TableHead>
+                  <TableHead className="text-white font-semibold">Descripción</TableHead>
+                  <TableHead className="text-white font-semibold text-right">Monto</TableHead>
+                  <TableHead className="text-white font-semibold">Usuario</TableHead>
+                  <TableHead className="text-white font-semibold">Fecha</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {auditEntries.map((e) => {
+                  const color = AUDIT_TYPE_COLORS[e.type] ?? { bg: '#f3f4f6', color: '#6b7280' }
+                  return (
+                    <TableRow key={e.id} className="hover:bg-gray-50 transition-colors">
+                      <TableCell>
+                        <span className="px-2 py-1 rounded-full text-xs font-semibold"
+                          style={{ backgroundColor: color.bg, color: color.color }}>
+                          {AUDIT_TYPE_LABELS[e.type] ?? e.type}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-base text-gray-700 max-w-[300px] truncate">{e.description}</TableCell>
+                      <TableCell className="text-right text-base text-gray-600">
+                        {e.amount != null ? `₡${e.amount.toLocaleString('es-CR', { minimumFractionDigits: 2 })}` : '—'}
+                      </TableCell>
+                      <TableCell className="text-base text-gray-600">{e.user_name}</TableCell>
+                      <TableCell className="text-base text-gray-500">
+                        {new Date(e.created_at).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+                {auditEntries.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center text-gray-400 py-12 text-base">
+                      Sin registros en el período seleccionado.
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </div>
