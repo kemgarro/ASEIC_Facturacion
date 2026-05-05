@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Package, ShoppingCart, History, Users, Warehouse, Tag } from 'lucide-react'
+import { LayoutDashboard, Package, ShoppingCart, History, Users, Warehouse, Tag, Trash2, Wallet, ClipboardList, BarChart3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface SidebarProps {
@@ -16,6 +16,10 @@ const navItems = [
   { href: '/productos', label: 'Productos', icon: Package, roles: ['admin'] },
   { href: '/inventario', label: 'Inventario', icon: Warehouse, roles: ['admin'] },
   { href: '/promociones', label: 'Promociones', icon: Tag, roles: ['admin'] },
+  { href: '/inventario/perdidas', label: 'Pérdidas', icon: Trash2, roles: ['admin'] },
+  { href: '/caja', label: 'Caja', icon: Wallet, roles: ['admin'] },
+  { href: '/auditoria', label: 'Auditoría', icon: ClipboardList, roles: ['admin'] },
+  { href: '/reportes', label: 'Reportes', icon: BarChart3, roles: ['admin'] },
   { href: '/admin/usuarios', label: 'Usuarios', icon: Users, roles: ['admin'] },
 ]
 
