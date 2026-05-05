@@ -13,14 +13,26 @@ interface PageProps {
 }
 
 const AUDIT_TYPE_LABELS: Record<string, string> = {
-  venta: 'Venta', anulacion: 'Anulación', inventario: 'Inventario', perdida: 'Pérdida', caja: 'Caja',
+  venta_creada: 'Venta',
+  venta_anulada: 'Anulación',
+  producto_creado: 'Prod. creado',
+  producto_editado: 'Prod. editado',
+  inventario_entrada: 'Inventario',
+  perdida_registrada: 'Pérdida',
+  caja_movimiento: 'Caja',
+  promocion_creada: 'Promo. creada',
+  promocion_editada: 'Promo. editada',
 }
 const AUDIT_TYPE_COLORS: Record<string, { bg: string; color: string }> = {
-  venta: { bg: '#dcfce7', color: '#16a34a' },
-  anulacion: { bg: '#fee2e2', color: '#dc2626' },
-  inventario: { bg: '#dbeafe', color: '#2563eb' },
-  perdida: { bg: '#fef3c7', color: '#d97706' },
-  caja: { bg: '#f3e8ff', color: '#7c3aed' },
+  venta_creada: { bg: '#dcfce7', color: '#16a34a' },
+  venta_anulada: { bg: '#fee2e2', color: '#dc2626' },
+  producto_creado: { bg: '#dbeafe', color: '#2563eb' },
+  producto_editado: { bg: '#e0e7ff', color: '#4338ca' },
+  inventario_entrada: { bg: '#dbeafe', color: '#2563eb' },
+  perdida_registrada: { bg: '#fef3c7', color: '#d97706' },
+  caja_movimiento: { bg: '#f3e8ff', color: '#7c3aed' },
+  promocion_creada: { bg: '#fce7f3', color: '#be185d' },
+  promocion_editada: { bg: '#fce7f3', color: '#be185d' },
 }
 
 function getDefaultDates() {

@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { type CartItem } from '@/lib/store/cart'
+import { logAudit } from '@/lib/actions/audit'
 
 export type PaymentMethod = 'efectivo' | 'sinpe' | 'mixto'
 
@@ -96,6 +97,10 @@ export async function createSale(
     ? `Venta #${sale.id} — Mixto (₡${payment.cashAmount ?? 0} efectivo + ₡${payment.sinpeAmount ?? 0} SINPE)`
     : `Venta #${sale.id} — Efectivo`
 
+  const { data: sellerProfile } = await supabase
+    .from('profiles').select('full_name').eq('id', user.id).single()
+  const sellerName = sellerProfile?.full_name ?? user.email ?? user.id
+
   await supabase.from('cash_movements').insert({
     type: 'ingreso',
     amount: total.toFixed(2),
@@ -103,6 +108,12 @@ export async function createSale(
     category: 'venta',
     reference_id: sale.id,
     created_by: user.id,
+  })
+
+  await logAudit(supabase, user.id, sellerName, 'venta_creada', 'sale', sale.id, {
+    amount: total,
+    description: paymentDesc,
+    items: items.map(i => ({ name: i.name, qty: i.quantity, price: i.price })),
   })
 
   revalidatePath('/ventas')
@@ -171,6 +182,10 @@ export async function cancelSale(saleId: number, reason: string): Promise<SaleRe
     .eq('id', saleId)
     .single()
 
+  const { data: adminProfile } = await supabase
+    .from('profiles').select('full_name').eq('id', user.id).single()
+  const adminName = adminProfile?.full_name ?? user.email ?? user.id
+
   if (saleData) {
     await supabase.from('cash_movements').insert({
       type: 'egreso',
@@ -179,6 +194,12 @@ export async function cancelSale(saleId: number, reason: string): Promise<SaleRe
       category: 'anulacion',
       reference_id: saleId,
       created_by: user.id,
+    })
+
+    await logAudit(supabase, user.id, adminName, 'venta_anulada', 'sale', saleId, {
+      amount: Number(saleData.total),
+      description: `Venta #${saleId} anulada — ${reason.trim()}`,
+      reason: reason.trim(),
     })
   }
 

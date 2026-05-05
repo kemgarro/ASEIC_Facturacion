@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
+import { logAudit } from '@/lib/actions/audit'
 
 const CashMovementSchema = z.object({
   type: z.enum(['ingreso', 'egreso']),
@@ -21,14 +22,16 @@ async function requireAuth() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('No autenticado')
-  return { supabase, user }
+  const { data: profile } = await supabase
+    .from('profiles').select('full_name').eq('id', user.id).single()
+  return { supabase, user, userName: profile?.full_name ?? user.email ?? user.id }
 }
 
 export async function createCashMovement(
   _: CashMovementState,
   formData: FormData
 ): Promise<CashMovementState> {
-  const { supabase, user } = await requireAuth()
+  const { supabase, user, userName } = await requireAuth()
 
   const parsed = CashMovementSchema.safeParse({
     type: formData.get('type'),
@@ -47,6 +50,13 @@ export async function createCashMovement(
   })
 
   if (error) return { message: `Error: ${error.message}` }
+
+  await logAudit(supabase, user.id, userName, 'caja_movimiento', 'cash_movement', '', {
+    type: parsed.data.type,
+    amount: parsed.data.amount,
+    description: parsed.data.description,
+    category: parsed.data.category,
+  })
 
   revalidatePath('/caja')
   redirect('/caja')

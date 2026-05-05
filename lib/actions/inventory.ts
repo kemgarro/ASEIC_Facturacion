@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
+import { logAudit } from '@/lib/actions/audit'
 
 const EntrySchema = z.object({
   product_id: z.coerce.number().int().positive('Producto requerido'),
@@ -25,19 +26,19 @@ async function requireAdmin() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role')
+    .select('role, full_name')
     .eq('id', user.id)
     .single()
 
   if (profile?.role !== 'admin') throw new Error('Acceso denegado')
-  return { supabase, user }
+  return { supabase, user, userName: profile.full_name ?? user.email ?? user.id }
 }
 
 export async function createInventoryEntry(
   _: InventoryEntryState,
   formData: FormData
 ): Promise<InventoryEntryState> {
-  const { supabase, user } = await requireAdmin()
+  const { supabase, user, userName } = await requireAdmin()
 
   const parsed = EntrySchema.safeParse({
     product_id: formData.get('product_id'),
@@ -72,6 +73,17 @@ export async function createInventoryEntry(
     .eq('id', parsed.data.product_id)
 
   if (stockError) return { message: `Error al actualizar stock: ${stockError.message}` }
+
+  const { data: productData } = await supabase
+    .from('products').select('name').eq('id', parsed.data.product_id).single()
+
+  await logAudit(supabase, user.id, userName, 'inventario_entrada', 'inventory_entry', parsed.data.product_id, {
+    product_name: productData?.name ?? 'desconocido',
+    quantity: parsed.data.quantity,
+    cost: parsed.data.cost,
+    supplier: parsed.data.supplier,
+    description: `Entrada de ${parsed.data.quantity} × ${productData?.name ?? 'producto'}${parsed.data.supplier ? ` (${parsed.data.supplier})` : ''}`,
+  })
 
   revalidatePath('/inventario')
   revalidatePath('/productos')
