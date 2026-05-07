@@ -10,7 +10,12 @@ interface CartProps {
 }
 
 export default function Cart({ promotions = [] }: CartProps) {
-  const { items, removeItem, updateQty, total, getAppliedDiscounts, discountedTotal } = useCartStore()
+  const items = useCartStore((s) => s.items)
+  const removeItem = useCartStore((s) => s.removeItem)
+  const updateQty = useCartStore((s) => s.updateQty)
+  const total = useCartStore((s) => s.total)
+  const getAppliedDiscounts = useCartStore((s) => s.getAppliedDiscounts)
+  const discountedTotal = useCartStore((s) => s.discountedTotal)
   const discounts = getAppliedDiscounts(promotions)
   const finalTotal = discountedTotal(promotions)
   const rawTotal = total()

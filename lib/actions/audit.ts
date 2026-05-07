@@ -20,7 +20,7 @@ export async function logAudit(
   entityId: string | number,
   details: Record<string, unknown>
 ) {
-  await supabase.from('audit_log').insert({
+  const { error } = await supabase.from('audit_log').insert({
     user_id: userId,
     user_name: userName,
     action,
@@ -28,6 +28,9 @@ export async function logAudit(
     entity_id: String(entityId),
     details,
   })
+  if (error) {
+    console.error('[audit] insert failed', { action, entity, entityId, error: error.message })
+  }
 }
 
 export type AuditEntry = {

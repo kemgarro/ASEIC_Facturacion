@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useCartStore } from '@/lib/store/cart'
-import { createSale } from '@/lib/actions/sales'
+import { createSale, type PaymentMethod, type PaymentInfo } from '@/lib/actions/sales'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -19,7 +19,11 @@ interface CheckoutModalProps {
 }
 
 export default function CheckoutModal({ promotions = [] }: CheckoutModalProps) {
-  const { items, total, discountedTotal, getAppliedDiscounts, clearCart } = useCartStore()
+  const items = useCartStore((s) => s.items)
+  const total = useCartStore((s) => s.total)
+  const discountedTotal = useCartStore((s) => s.discountedTotal)
+  const getAppliedDiscounts = useCartStore((s) => s.getAppliedDiscounts)
+  const clearCart = useCartStore((s) => s.clearCart)
   const finalTotal = discountedTotal(promotions)
   const rawTotal = total()
   const discounts = getAppliedDiscounts(promotions)
@@ -27,11 +31,30 @@ export default function CheckoutModal({ promotions = [] }: CheckoutModalProps) {
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
   const [error, setError] = useState('')
+  const [method, setMethod] = useState<PaymentMethod>('efectivo')
+  const [cashAmount, setCashAmount] = useState('')
+  const [sinpeAmount, setSinpeAmount] = useState('')
+  const [referenceCode, setReferenceCode] = useState('')
+
+  function buildPayment(): PaymentInfo {
+    if (method === 'sinpe') {
+      return { method, sinpeAmount: finalTotal, referenceCode: referenceCode.trim() }
+    }
+    if (method === 'mixto') {
+      return {
+        method,
+        cashAmount: Number(cashAmount) || 0,
+        sinpeAmount: Number(sinpeAmount) || 0,
+        referenceCode: referenceCode.trim() || undefined,
+      }
+    }
+    return { method: 'efectivo', cashAmount: finalTotal }
+  }
 
   async function handleConfirm() {
     setLoading(true)
     setError('')
-    const result = await createSale(items, null, finalTotal)
+    const result = await createSale(items, null, buildPayment())
     setLoading(false)
 
     if (!result.success) {
@@ -43,14 +66,32 @@ export default function CheckoutModal({ promotions = [] }: CheckoutModalProps) {
     clearCart()
   }
 
+  function resetPayment() {
+    setMethod('efectivo')
+    setCashAmount('')
+    setSinpeAmount('')
+    setReferenceCode('')
+  }
+
   function handleClose() {
     setOpen(false)
     setDone(false)
     setError('')
+    resetPayment()
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setDone(false); setError('') } }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        setOpen(v)
+        if (!v) {
+          setDone(false)
+          setError('')
+          resetPayment()
+        }
+      }}
+    >
       <DialogTrigger asChild>
         <Button
           className="w-full h-14 text-lg font-bold rounded-xl shadow-md hover:opacity-90"
@@ -111,6 +152,70 @@ export default function CheckoutModal({ promotions = [] }: CheckoutModalProps) {
                 <span style={{ color: '#023e55' }}>Total</span>
                 <span style={{ color: '#023e55' }}>₡{finalTotal.toFixed(2)}</span>
               </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium text-gray-600">Método de pago</label>
+                <select
+                  value={method}
+                  onChange={(e) => setMethod(e.target.value as PaymentMethod)}
+                  className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="efectivo">Efectivo</option>
+                  <option value="sinpe">SINPE</option>
+                  <option value="mixto">Mixto</option>
+                </select>
+              </div>
+
+              {method === 'sinpe' && (
+                <div className="flex flex-col gap-1">
+                  <label className="text-sm font-medium text-gray-600">Código de referencia</label>
+                  <input
+                    type="text"
+                    value={referenceCode}
+                    onChange={(e) => setReferenceCode(e.target.value)}
+                    placeholder="Ref. SINPE"
+                    className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                  />
+                </div>
+              )}
+
+              {method === 'mixto' && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-sm font-medium text-gray-600">Efectivo</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={cashAmount}
+                      onChange={(e) => setCashAmount(e.target.value)}
+                      className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-sm font-medium text-gray-600">SINPE</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={sinpeAmount}
+                      onChange={(e) => setSinpeAmount(e.target.value)}
+                      className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                    />
+                  </div>
+                  <div className="col-span-2 flex flex-col gap-1">
+                    <label className="text-sm font-medium text-gray-600">Ref. SINPE (opcional)</label>
+                    <input
+                      type="text"
+                      value={referenceCode}
+                      onChange={(e) => setReferenceCode(e.target.value)}
+                      className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {error && (

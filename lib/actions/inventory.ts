@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { logAudit } from '@/lib/actions/audit'
+import { attachProfiles } from '@/lib/supabase/relations'
 
 const EntrySchema = z.object({
   product_id: z.coerce.number().int().positive('Producto requerido'),
@@ -93,12 +94,16 @@ export async function createInventoryEntry(
 
 export async function getInventoryEntries() {
   const supabase = await createClient()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('inventory_entries')
-    .select('id, quantity, cost, supplier, notes, created_at, products(name), profiles(full_name)')
+    .select('id, quantity, cost, supplier, notes, created_at, created_by, products(name)')
     .order('created_at', { ascending: false })
     .limit(200)
-  return data ?? []
+  if (error) {
+    console.error('[inventory] getInventoryEntries failed', error.message)
+    return []
+  }
+  return attachProfiles(supabase, data ?? [], 'created_by')
 }
 
 export async function getProductsForInventory() {

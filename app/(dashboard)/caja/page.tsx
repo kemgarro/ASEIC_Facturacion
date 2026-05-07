@@ -136,7 +136,7 @@ export default async function CajaPage({ searchParams }: PageProps) {
                 <TableCell className="text-base text-gray-700 max-w-[200px] truncate">{m.description}</TableCell>
                 <TableCell className="text-base text-gray-500">{m.category ?? '—'}</TableCell>
                 <TableCell className="text-base text-gray-600">
-                  {((m.profiles as unknown) as { full_name: string }[] | null)?.[0]?.full_name ?? '—'}
+                  {m.profiles?.full_name ?? '—'}
                 </TableCell>
                 <TableCell className="text-base text-gray-500">
                   {new Date(m.created_at).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}

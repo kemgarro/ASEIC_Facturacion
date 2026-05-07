@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { pickOne } from '@/lib/supabase/relations'
 
 export type SalesReport = {
   totalSales: number
@@ -42,7 +43,7 @@ export async function getSalesReport(dateFrom: string, dateTo: string): Promise<
 
   const productMap: Record<string, { qty: number; revenue: number }> = {}
   for (const item of items ?? []) {
-    const name = ((item.products as unknown) as { name: string }[] | null)?.[0]?.name ?? 'Desconocido'
+    const name = pickOne<{ name: string }>(item.products as unknown as { name: string } | { name: string }[] | null)?.name ?? 'Desconocido'
     if (!productMap[name]) productMap[name] = { qty: 0, revenue: 0 }
     productMap[name].qty += item.quantity
     productMap[name].revenue += Number(item.subtotal)
@@ -95,24 +96,3 @@ export async function getStockReport(): Promise<StockReport> {
   }
 }
 
-export async function comparePeriods(
-  period1From: string,
-  period1To: string,
-  period2From: string,
-  period2To: string
-) {
-  const [p1, p2] = await Promise.all([
-    getSalesReport(period1From, period1To),
-    getSalesReport(period2From, period2To),
-  ])
-
-  return {
-    period1: p1,
-    period2: p2,
-    diff: {
-      sales: p2.totalSales - p1.totalSales,
-      revenue: p2.totalRevenue - p1.totalRevenue,
-      avgTicket: p2.avgTicket - p1.avgTicket,
-    },
-  }
-}

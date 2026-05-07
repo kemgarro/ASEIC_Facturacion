@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { logAudit } from '@/lib/actions/audit'
+import { attachProfiles } from '@/lib/supabase/relations'
 
 const CashMovementSchema = z.object({
   type: z.enum(['ingreso', 'egreso']),
@@ -44,14 +45,18 @@ export async function createCashMovement(
     return { errors: parsed.error.flatten().fieldErrors }
   }
 
-  const { error } = await supabase.from('cash_movements').insert({
-    ...parsed.data,
-    created_by: user.id,
-  })
+  const { data: movement, error } = await supabase
+    .from('cash_movements')
+    .insert({
+      ...parsed.data,
+      created_by: user.id,
+    })
+    .select('id')
+    .single()
 
-  if (error) return { message: `Error: ${error.message}` }
+  if (error || !movement) return { message: `Error: ${error?.message ?? 'No se pudo registrar el movimiento'}` }
 
-  await logAudit(supabase, user.id, userName, 'caja_movimiento', 'cash_movement', '', {
+  await logAudit(supabase, user.id, userName, 'caja_movimiento', 'cash_movement', movement.id, {
     type: parsed.data.type,
     amount: parsed.data.amount,
     description: parsed.data.description,
@@ -67,15 +72,19 @@ export async function getCashMovements(dateFrom?: string, dateTo?: string) {
 
   let query = supabase
     .from('cash_movements')
-    .select('id, type, amount, description, category, created_at, profiles(full_name)')
+    .select('id, type, amount, description, category, created_at, created_by')
     .order('created_at', { ascending: false })
     .limit(500)
 
   if (dateFrom) query = query.gte('created_at', `${dateFrom}T00:00:00`)
   if (dateTo) query = query.lte('created_at', `${dateTo}T23:59:59`)
 
-  const { data } = await query
-  return data ?? []
+  const { data, error } = await query
+  if (error) {
+    console.error('[cash] getCashMovements failed', error.message)
+    return []
+  }
+  return attachProfiles(supabase, data ?? [], 'created_by')
 }
 
 export async function getCashSummary(dateFrom?: string, dateTo?: string) {

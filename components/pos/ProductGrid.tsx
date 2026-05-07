@@ -1,6 +1,7 @@
 'use client'
 
 import { useCartStore } from '@/lib/store/cart'
+import { pickOne } from '@/lib/supabase/relations'
 import { Plus } from 'lucide-react'
 
 type Product = {
@@ -8,7 +9,7 @@ type Product = {
   name: string
   price: number
   stock: number
-  categories: { name: string }[] | null
+  categories: { name: string } | { name: string }[] | null
 }
 
 interface ProductGridProps {
@@ -42,8 +43,8 @@ export default function ProductGrid({ products }: ProductGridProps) {
               <p className="font-semibold text-base leading-tight truncate" style={{ color: '#023e55' }}>
                 {p.name}
               </p>
-              {p.categories?.[0]?.name && (
-                <p className="text-sm text-gray-400 truncate mt-0.5">{p.categories[0].name}</p>
+              {pickOne<{ name: string }>(p.categories)?.name && (
+                <p className="text-sm text-gray-400 truncate mt-0.5">{pickOne<{ name: string }>(p.categories)!.name}</p>
               )}
               <p className="text-lg font-bold mt-2" style={{ color: '#2ba5b2' }}>
                 ₡{Number(p.price).toFixed(2)}

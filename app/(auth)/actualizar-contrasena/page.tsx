@@ -23,8 +23,8 @@ export default function ActualizarContrasenaPage() {
       return
     }
 
-    if (password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres.')
+    if (password.length < 8) {
+      setError('La contraseña debe tener al menos 8 caracteres.')
       return
     }
 
@@ -68,11 +68,14 @@ export default function ActualizarContrasenaPage() {
               </Label>
               <Input
                 id="password"
+                name="new-password"
                 type="password"
+                autoComplete="new-password"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                minLength={8}
                 className="h-12 text-base"
               />
             </div>
@@ -83,11 +86,14 @@ export default function ActualizarContrasenaPage() {
               </Label>
               <Input
                 id="confirm"
+                name="new-password-confirm"
                 type="password"
+                autoComplete="new-password"
                 placeholder="••••••••"
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
                 required
+                minLength={8}
                 className="h-12 text-base"
               />
             </div>
