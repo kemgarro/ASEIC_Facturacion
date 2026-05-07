@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { attachProfiles } from '@/lib/supabase/relations'
 import {
   Table,
   TableBody,
@@ -11,11 +12,13 @@ import {
 export default async function HistorialPage() {
   const supabase = await createClient()
 
-  const { data: sales } = await supabase
+  const { data: salesRaw } = await supabase
     .from('sales')
-    .select('id, total, status, created_at, profiles(full_name), sale_items(quantity)')
+    .select('id, total, status, created_at, seller_id, sale_items(quantity)')
     .order('created_at', { ascending: false })
     .limit(100)
+
+  const sales = await attachProfiles(supabase, salesRaw ?? [], 'seller_id')
 
   return (
     <div className="space-y-6">
@@ -44,7 +47,7 @@ export default async function HistorialPage() {
                   })}
                 </TableCell>
                 <TableCell className="text-base font-medium" style={{ color: '#023e55' }}>
-                  {(s.profiles as { full_name: string }[] | null)?.[0]?.full_name ?? '—'}
+                  {s.profiles?.full_name ?? '—'}
                 </TableCell>
                 <TableCell className="text-right text-base text-gray-600">
                   {(s.sale_items as { quantity: number }[])?.reduce((sum, i) => sum + i.quantity, 0) ?? 0}

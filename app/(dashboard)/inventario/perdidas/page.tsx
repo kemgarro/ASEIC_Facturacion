@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { getLosses } from '@/lib/actions/losses'
+import { pickOne } from '@/lib/supabase/relations'
 import { Button } from '@/components/ui/button'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -41,7 +42,7 @@ export default async function PerdidasPage() {
             {losses.map((l) => (
               <TableRow key={l.id} className="hover:bg-gray-50 transition-colors">
                 <TableCell className="font-semibold text-base" style={{ color: '#023e55' }}>
-                  {((l.products as unknown) as { name: string }[] | null)?.[0]?.name ?? '—'}
+                  {pickOne<{ name: string }>(l.products as unknown as { name: string } | { name: string }[] | null)?.name ?? '—'}
                 </TableCell>
                 <TableCell className="text-right text-base font-bold text-red-600">
                   -{l.quantity}
@@ -51,7 +52,7 @@ export default async function PerdidasPage() {
                 </TableCell>
                 <TableCell className="text-base text-gray-600 max-w-[200px] truncate">{l.reason}</TableCell>
                 <TableCell className="text-base text-gray-600">
-                  {((l.profiles as unknown) as { full_name: string }[] | null)?.[0]?.full_name ?? '—'}
+                  {l.profiles?.full_name ?? '—'}
                 </TableCell>
                 <TableCell className="text-base text-gray-500">
                   {new Date(l.created_at).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}

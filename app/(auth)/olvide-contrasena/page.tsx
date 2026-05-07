@@ -74,7 +74,9 @@ export default function OlvideContrasenaPage() {
                   </Label>
                   <Input
                     id="email"
+                    name="email"
                     type="email"
+                    autoComplete="email"
                     placeholder="usuario@empresa.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}

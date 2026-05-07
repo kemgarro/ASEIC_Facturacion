@@ -1,4 +1,5 @@
 import { getAuditLog } from '@/lib/actions/audit'
+import { AUDIT_TYPE_LABELS, AUDIT_TYPE_COLORS, AUDIT_TYPE_FILTER_OPTIONS } from '@/lib/audit/labels'
 import { Button } from '@/components/ui/button'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -7,22 +8,6 @@ import Link from 'next/link'
 
 interface PageProps {
   searchParams: Promise<{ from?: string; to?: string; type?: string }>
-}
-
-const TYPE_LABELS: Record<string, string> = {
-  venta: 'Venta',
-  anulacion: 'Anulación',
-  inventario: 'Inventario',
-  perdida: 'Pérdida',
-  caja: 'Caja',
-}
-
-const TYPE_COLORS: Record<string, { bg: string; color: string }> = {
-  venta: { bg: '#dcfce7', color: '#16a34a' },
-  anulacion: { bg: '#fee2e2', color: '#dc2626' },
-  inventario: { bg: '#dbeafe', color: '#2563eb' },
-  perdida: { bg: '#fef3c7', color: '#d97706' },
-  caja: { bg: '#f3e8ff', color: '#7c3aed' },
 }
 
 export default async function AuditoriaPage({ searchParams }: PageProps) {
@@ -61,11 +46,9 @@ export default async function AuditoriaPage({ searchParams }: PageProps) {
             className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
           >
             <option value="">Todos</option>
-            <option value="venta">Ventas</option>
-            <option value="anulacion">Anulaciones</option>
-            <option value="inventario">Inventario</option>
-            <option value="perdida">Pérdidas</option>
-            <option value="caja">Caja</option>
+            {AUDIT_TYPE_FILTER_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
           </select>
         </div>
         <Button type="submit" variant="outline" className="h-10 rounded-xl">
@@ -91,7 +74,7 @@ export default async function AuditoriaPage({ searchParams }: PageProps) {
           </TableHeader>
           <TableBody>
             {entries.map((e) => {
-              const color = TYPE_COLORS[e.type] ?? { bg: '#f3f4f6', color: '#6b7280' }
+              const color = AUDIT_TYPE_COLORS[e.type] ?? { bg: '#f3f4f6', color: '#6b7280' }
               return (
                 <TableRow key={e.id} className="hover:bg-gray-50 transition-colors">
                   <TableCell>
@@ -99,7 +82,7 @@ export default async function AuditoriaPage({ searchParams }: PageProps) {
                       className="px-2 py-1 rounded-full text-xs font-semibold"
                       style={{ backgroundColor: color.bg, color: color.color }}
                     >
-                      {TYPE_LABELS[e.type] ?? e.type}
+                      {AUDIT_TYPE_LABELS[e.type] ?? e.type}
                     </span>
                   </TableCell>
                   <TableCell className="text-base text-gray-700 max-w-[300px] truncate">

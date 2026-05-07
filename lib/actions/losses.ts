@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { logAudit } from '@/lib/actions/audit'
+import { attachProfiles } from '@/lib/supabase/relations'
 
 const LossSchema = z.object({
   product_id: z.coerce.number().int().positive('Producto requerido'),
@@ -102,10 +103,14 @@ export async function getProductsForLosses() {
 
 export async function getLosses() {
   const supabase = await createClient()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('losses')
-    .select('id, quantity, reason, cost, created_at, products(name), profiles(full_name)')
+    .select('id, quantity, reason, cost, created_at, created_by, products(name)')
     .order('created_at', { ascending: false })
     .limit(200)
-  return data ?? []
+  if (error) {
+    console.error('[losses] getLosses failed', error.message)
+    return []
+  }
+  return attachProfiles(supabase, data ?? [], 'created_by')
 }

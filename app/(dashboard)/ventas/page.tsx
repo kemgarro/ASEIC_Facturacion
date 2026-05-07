@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { getActivePromotions } from '@/lib/actions/promotions'
 import { getCashMovements, getCashSummary, createCashMovement } from '@/lib/actions/cash'
+import { attachProfiles } from '@/lib/supabase/relations'
 import ProductGrid from '@/components/pos/ProductGrid'
 import Cart from '@/components/pos/Cart'
 import CashForm from '@/components/cash/CashForm'
@@ -36,21 +37,35 @@ export default async function VentasPage({ searchParams }: PageProps) {
   const supabase = await createClient()
 
   const [{ data: products }, promotions] = await Promise.all([
-    supabase
-      .from('products')
-      .select('id, name, price, stock, categories(name)')
-      .eq('active', true)
-      .order('name'),
-    getActivePromotions(),
+    activeTab === 'pos'
+      ? supabase
+          .from('products')
+          .select('id, name, price, stock, categories(name)')
+          .eq('active', true)
+          .order('name')
+      : Promise.resolve({ data: [] as ProductRow[] }),
+    activeTab === 'pos' ? getActivePromotions() : Promise.resolve([] as Promotion[]),
   ])
 
-  const { data: sales } = activeTab === 'historial'
-    ? await supabase
-        .from('sales')
-        .select('id, total, status, created_at, profiles(full_name), sale_items(quantity)')
-        .order('created_at', { ascending: false })
-        .limit(100)
-    : { data: null }
+  type SaleRow = {
+    id: number
+    total: number
+    status: string
+    created_at: string
+    seller_id: string | null
+    sale_items: { quantity: number }[]
+    profiles: { full_name: string } | null
+  }
+  let sales: SaleRow[] | null = null
+  if (activeTab === 'historial') {
+    const { data: salesRaw } = await supabase
+      .from('sales')
+      .select('id, total, status, created_at, seller_id, sale_items(quantity)')
+      .order('created_at', { ascending: false })
+      .limit(100)
+    const enriched = await attachProfiles(supabase, (salesRaw ?? []) as Record<string, unknown>[], 'seller_id')
+    sales = enriched as unknown as SaleRow[]
+  }
 
   const [cashMovements, cashSummary] = activeTab === 'caja'
     ? await Promise.all([getCashMovements(from, to), getCashSummary(from, to)])
@@ -113,7 +128,7 @@ export default async function VentasPage({ searchParams }: PageProps) {
                     {new Date(s.created_at).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}
                   </TableCell>
                   <TableCell className="text-base font-medium" style={{ color: '#023e55' }}>
-                    {(s.profiles as { full_name: string }[] | null)?.[0]?.full_name ?? '—'}
+                    {s.profiles?.full_name ?? '—'}
                   </TableCell>
                   <TableCell className="text-right text-base text-gray-600">
                     {(s.sale_items as { quantity: number }[])?.reduce((sum, i) => sum + i.quantity, 0) ?? 0}
@@ -221,7 +236,7 @@ export default async function VentasPage({ searchParams }: PageProps) {
                       </TableCell>
                       <TableCell className="text-base text-gray-700 max-w-[160px] truncate">{m.description}</TableCell>
                       <TableCell className="text-base text-gray-600">
-                        {((m.profiles as unknown) as { full_name: string }[] | null)?.[0]?.full_name ?? '—'}
+                        {m.profiles?.full_name ?? '—'}
                       </TableCell>
                       <TableCell className="text-base text-gray-500">
                         {new Date(m.created_at).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}

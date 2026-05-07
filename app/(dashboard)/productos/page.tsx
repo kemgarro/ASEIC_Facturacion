@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getInventoryEntries } from '@/lib/actions/inventory'
 import { getLosses } from '@/lib/actions/losses'
 import { getPromotions } from '@/lib/actions/promotions'
+import { pickOne } from '@/lib/supabase/relations'
 import { Button } from '@/components/ui/button'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -90,7 +91,7 @@ export default async function ProductosPage({ searchParams }: PageProps) {
                     <TableCell className="font-semibold text-base" style={{ color: '#023e55' }}>{p.name}</TableCell>
                     <TableCell className="text-base text-gray-500">{p.sku ?? '—'}</TableCell>
                     <TableCell className="text-base text-gray-500">
-                      {(p.categories as { name: string }[] | null)?.[0]?.name ?? '—'}
+                      {pickOne<{ name: string }>(p.categories as unknown as { name: string } | { name: string }[] | null)?.name ?? '—'}
                     </TableCell>
                     <TableCell className="text-right text-base font-medium" style={{ color: '#3b4e73' }}>
                       ₡{Number(p.price).toFixed(2)}
@@ -158,7 +159,7 @@ export default async function ProductosPage({ searchParams }: PageProps) {
                 {entries.map((e) => (
                   <TableRow key={e.id} className="hover:bg-gray-50 transition-colors">
                     <TableCell className="font-semibold text-base" style={{ color: '#023e55' }}>
-                      {((e.products as unknown) as { name: string }[] | null)?.[0]?.name ?? '—'}
+                      {pickOne<{ name: string }>(e.products as unknown as { name: string } | { name: string }[] | null)?.name ?? '—'}
                     </TableCell>
                     <TableCell className="text-right text-base font-bold" style={{ color: '#2ba5b2' }}>+{e.quantity}</TableCell>
                     <TableCell className="text-right text-base text-gray-600">
@@ -167,7 +168,7 @@ export default async function ProductosPage({ searchParams }: PageProps) {
                     <TableCell className="text-base text-gray-600">{e.supplier ?? '—'}</TableCell>
                     <TableCell className="text-base text-gray-500 max-w-[180px] truncate">{e.notes ?? '—'}</TableCell>
                     <TableCell className="text-base text-gray-600">
-                      {((e.profiles as unknown) as { full_name: string }[] | null)?.[0]?.full_name ?? '—'}
+                      {e.profiles?.full_name ?? '—'}
                     </TableCell>
                     <TableCell className="text-base text-gray-500">
                       {new Date(e.created_at).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}
@@ -213,7 +214,7 @@ export default async function ProductosPage({ searchParams }: PageProps) {
                 {losses.map((l) => (
                   <TableRow key={l.id} className="hover:bg-gray-50 transition-colors">
                     <TableCell className="font-semibold text-base" style={{ color: '#023e55' }}>
-                      {((l.products as unknown) as { name: string }[] | null)?.[0]?.name ?? '—'}
+                      {pickOne<{ name: string }>(l.products as unknown as { name: string } | { name: string }[] | null)?.name ?? '—'}
                     </TableCell>
                     <TableCell className="text-right text-base font-bold text-red-600">-{l.quantity}</TableCell>
                     <TableCell className="text-right text-base text-gray-600">
@@ -221,7 +222,7 @@ export default async function ProductosPage({ searchParams }: PageProps) {
                     </TableCell>
                     <TableCell className="text-base text-gray-600 max-w-[200px] truncate">{l.reason}</TableCell>
                     <TableCell className="text-base text-gray-600">
-                      {((l.profiles as unknown) as { full_name: string }[] | null)?.[0]?.full_name ?? '—'}
+                      {l.profiles?.full_name ?? '—'}
                     </TableCell>
                     <TableCell className="text-base text-gray-500">
                       {new Date(l.created_at).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}

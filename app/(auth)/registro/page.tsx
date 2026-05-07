@@ -166,7 +166,9 @@ export default function RegisterPage() {
               </Label>
               <Input
                 id="fullName"
+                name="name"
                 type="text"
+                autoComplete="name"
                 placeholder="Juan Pérez"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
@@ -181,7 +183,9 @@ export default function RegisterPage() {
               </Label>
               <Input
                 id="email"
+                name="email"
                 type="email"
+                autoComplete="email"
                 placeholder="usuario@empresa.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -196,19 +200,25 @@ export default function RegisterPage() {
               </Label>
               <Input
                 id="password"
+                name="new-password"
                 type="password"
+                autoComplete="new-password"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                minLength={6}
+                minLength={8}
                 className="h-12 text-base"
               />
-              <p className="text-xs text-gray-400">Mínimo 6 caracteres</p>
+              <p className="text-xs text-gray-400">Mínimo 8 caracteres</p>
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+              <div
+                role="alert"
+                aria-live="assertive"
+                className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm"
+              >
                 {error}
               </div>
             )}
