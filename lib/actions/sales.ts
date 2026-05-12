@@ -102,12 +102,28 @@ export async function createSale(
     })
 
     if (rpcErr) {
+      console.error('[createSale] decrement_stock error', { itemId: item.id, qty: item.quantity, rpcErr })
       await rollbackSale(supabase, sale.id, decremented)
-      return { success: false, error: `Error al actualizar stock: ${rpcErr.message}` }
+      return { success: false, error: `Error al actualizar stock para ${item.name} (id=${item.id}): ${rpcErr.message}` }
     }
     if (newStock === null) {
+      const { data: actual } = await supabase
+        .from('products')
+        .select('id, name, stock, active')
+        .eq('id', item.id)
+        .maybeSingle()
+      console.error('[createSale] decrement_stock returned null', {
+        cartItem: { id: item.id, name: item.name, qty: item.quantity },
+        productInDb: actual,
+      })
       await rollbackSale(supabase, sale.id, decremented)
-      return { success: false, error: `Stock insuficiente para: ${item.name}` }
+      const detail = actual
+        ? `disponible=${actual.stock}, activo=${actual.active}`
+        : `producto id=${item.id} no existe en DB`
+      return {
+        success: false,
+        error: `Stock insuficiente para "${item.name}" (id=${item.id}, pidió=${item.quantity}, ${detail})`,
+      }
     }
 
     decremented.push({ id: item.id, quantity: item.quantity })
