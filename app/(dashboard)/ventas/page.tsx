@@ -11,6 +11,7 @@ import {
 import { TrendingUp, TrendingDown, DollarSign } from 'lucide-react'
 import { formatDateTimeCR } from '@/lib/utils'
 import type { Promotion } from '@/lib/actions/promotions'
+import DeleteSaleButton from './historial/DeleteSaleButton'
 
 type ProductRow = {
   id: number
@@ -36,6 +37,12 @@ export default async function VentasPage({ searchParams }: PageProps) {
   const today = new Date().toISOString().split('T')[0]
 
   const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: viewerProfile } = user
+    ? await supabase.from('profiles').select('role').eq('id', user.id).single()
+    : { data: null }
+  const isAdmin = viewerProfile?.role === 'admin'
 
   const [{ data: products }, promotions] = await Promise.all([
     activeTab === 'pos'
@@ -119,6 +126,7 @@ export default async function VentasPage({ searchParams }: PageProps) {
                 <TableHead className="text-white text-base font-semibold text-right">Items</TableHead>
                 <TableHead className="text-white text-base font-semibold text-right">Total</TableHead>
                 <TableHead className="text-white text-base font-semibold">Estado</TableHead>
+                {isAdmin && <TableHead className="text-white text-base font-semibold text-right">Acciones</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -145,11 +153,16 @@ export default async function VentasPage({ searchParams }: PageProps) {
                       {s.status}
                     </span>
                   </TableCell>
+                  {isAdmin && (
+                    <TableCell className="text-right">
+                      <DeleteSaleButton saleId={s.id} saleTotal={Number(s.total)} />
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
               {(!sales || sales.length === 0) && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-gray-400 py-12 text-base">
+                  <TableCell colSpan={isAdmin ? 7 : 6} className="text-center text-gray-400 py-12 text-base">
                     No hay ventas registradas aún
                   </TableCell>
                 </TableRow>
