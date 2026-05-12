@@ -10,6 +10,7 @@ const TYPE_LABELS: Record<string, string> = {
   '2x1': '2x1',
   NxM: 'NxM',
   combo: 'Combo',
+  bundle: 'Paquete',
 }
 
 export default async function PromocionesPage() {
@@ -65,6 +66,7 @@ export default async function PromocionesPage() {
                 {promo.type === '2x1' && <p>Por cada 2 unidades, paga 1</p>}
                 {promo.type === 'NxM' && <p>Por cada {promo.buy_qty} unidades, paga {promo.pay_qty}</p>}
                 {promo.type === 'combo' && <p>Precio combo: <strong>₡{Number(promo.combo_price).toFixed(2)}</strong></p>}
+                {promo.type === 'bundle' && <p>{promo.buy_qty} × <strong>₡{Number(promo.combo_price).toFixed(2)}</strong></p>}
                 <p className="truncate">Productos: <span className="text-gray-700">{productNames || '—'}</span></p>
                 {(promo.starts_at || promo.ends_at) && (
                   <p>
