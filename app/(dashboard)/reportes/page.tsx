@@ -8,6 +8,7 @@ import {
 import { BarChart3, Package, TrendingUp, ShoppingBag, Receipt } from 'lucide-react'
 import Link from 'next/link'
 import ExportButton from './ExportButton'
+import { formatDateCR, formatDateTimeCR } from '@/lib/utils'
 
 interface PageProps {
   searchParams: Promise<{ from?: string; to?: string; tab?: string }>
@@ -165,7 +166,7 @@ export default async function ReportesPage({ searchParams }: PageProps) {
                   {salesReport.byDay.map((d) => (
                     <TableRow key={d.date} className="hover:bg-gray-50">
                       <TableCell className="text-gray-700">
-                        {new Date(d.date + 'T12:00:00').toLocaleDateString('es-CR', { dateStyle: 'medium' })}
+                        {formatDateCR(d.date + 'T12:00:00', 'medium')}
                       </TableCell>
                       <TableCell className="text-right text-gray-600">{d.sales}</TableCell>
                       <TableCell className="text-right font-semibold" style={{ color: '#16a34a' }}>
@@ -272,7 +273,7 @@ export default async function ReportesPage({ searchParams }: PageProps) {
                       </TableCell>
                       <TableCell className="text-base text-gray-600">{e.user_name}</TableCell>
                       <TableCell className="text-base text-gray-500">
-                        {new Date(e.created_at).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}
+                        {formatDateTimeCR(e.created_at)}
                       </TableCell>
                     </TableRow>
                   )

@@ -8,6 +8,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import { Plus } from 'lucide-react'
+import { formatDateTimeCR } from '@/lib/utils'
 
 export default async function InventarioPage() {
   const entries = await getInventoryEntries()
@@ -59,7 +60,7 @@ export default async function InventarioPage() {
                   {e.profiles?.full_name ?? '—'}
                 </TableCell>
                 <TableCell className="text-base text-gray-500">
-                  {new Date(e.created_at).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}
+                  {formatDateTimeCR(e.created_at)}
                 </TableCell>
               </TableRow>
             ))}

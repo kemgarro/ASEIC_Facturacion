@@ -58,21 +58,13 @@ export async function createLoss(
 
   if (lossError) return { message: `Error: ${lossError.message}` }
 
-  const { data: product } = await supabase
-    .from('products')
-    .select('stock')
-    .eq('id', parsed.data.product_id)
-    .single()
-
-  if (!product) return { message: 'Producto no encontrado' }
-
-  const newStock = Math.max(0, product.stock - parsed.data.quantity)
-  const { error: stockError } = await supabase
-    .from('products')
-    .update({ stock: newStock })
-    .eq('id', parsed.data.product_id)
+  const { data: newStock, error: stockError } = await supabase.rpc('decrement_stock_clamped', {
+    p_product_id: parsed.data.product_id,
+    p_qty: parsed.data.quantity,
+  })
 
   if (stockError) return { message: `Error al actualizar stock: ${stockError.message}` }
+  if (newStock === null) return { message: 'Producto no encontrado' }
 
   const { data: productData } = await supabase
     .from('products').select('name').eq('id', parsed.data.product_id).single()

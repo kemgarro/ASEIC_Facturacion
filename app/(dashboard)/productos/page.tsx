@@ -9,6 +9,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import { Plus, Pencil } from 'lucide-react'
+import { formatDateTimeCR } from '@/lib/utils'
 
 interface PageProps {
   searchParams: Promise<{ tab?: string }>
@@ -171,7 +172,7 @@ export default async function ProductosPage({ searchParams }: PageProps) {
                       {e.profiles?.full_name ?? '—'}
                     </TableCell>
                     <TableCell className="text-base text-gray-500">
-                      {new Date(e.created_at).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}
+                      {formatDateTimeCR(e.created_at)}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -225,7 +226,7 @@ export default async function ProductosPage({ searchParams }: PageProps) {
                       {l.profiles?.full_name ?? '—'}
                     </TableCell>
                     <TableCell className="text-base text-gray-500">
-                      {new Date(l.created_at).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}
+                      {formatDateTimeCR(l.created_at)}
                     </TableCell>
                   </TableRow>
                 ))}
