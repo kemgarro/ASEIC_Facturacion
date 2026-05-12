@@ -1,6 +1,7 @@
 export const AUDIT_TYPE_LABELS: Record<string, string> = {
   venta_creada: 'Venta',
   venta_anulada: 'Anulación',
+  venta_eliminada: 'Venta eliminada',
   producto_creado: 'Producto creado',
   producto_editado: 'Producto editado',
   inventario_entrada: 'Inventario',
@@ -13,6 +14,7 @@ export const AUDIT_TYPE_LABELS: Record<string, string> = {
 export const AUDIT_TYPE_COLORS: Record<string, { bg: string; color: string }> = {
   venta_creada: { bg: '#dcfce7', color: '#16a34a' },
   venta_anulada: { bg: '#fee2e2', color: '#dc2626' },
+  venta_eliminada: { bg: '#fecaca', color: '#991b1b' },
   producto_creado: { bg: '#dbeafe', color: '#2563eb' },
   producto_editado: { bg: '#e0e7ff', color: '#4338ca' },
   inventario_entrada: { bg: '#dbeafe', color: '#2563eb' },
@@ -25,6 +27,7 @@ export const AUDIT_TYPE_COLORS: Record<string, { bg: string; color: string }> = 
 export const AUDIT_TYPE_FILTER_OPTIONS: Array<{ value: string; label: string }> = [
   { value: 'venta_creada', label: 'Ventas' },
   { value: 'venta_anulada', label: 'Anulaciones' },
+  { value: 'venta_eliminada', label: 'Ventas eliminadas' },
   { value: 'inventario_entrada', label: 'Inventario' },
   { value: 'perdida_registrada', label: 'Pérdidas' },
   { value: 'caja_movimiento', label: 'Caja' },

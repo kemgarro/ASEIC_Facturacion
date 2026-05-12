@@ -254,3 +254,91 @@ export async function cancelSale(saleId: number, reason: string): Promise<SaleRe
 
   return { success: true, saleId }
 }
+
+export async function deleteSale(saleId: number, reason: string): Promise<SaleResult> {
+  if (!reason.trim()) return { success: false, error: 'Motivo requerido' }
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: 'No autenticado' }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role, full_name')
+    .eq('id', user.id)
+    .single()
+
+  if (profile?.role !== 'admin') return { success: false, error: 'Solo administradores pueden eliminar ventas' }
+
+  const { data: sale, error: saleErr } = await supabase
+    .from('sales')
+    .select('id, status, total, payment_method, created_at, sale_items(product_id, quantity, unit_price)')
+    .eq('id', saleId)
+    .single()
+
+  if (saleErr || !sale) return { success: false, error: 'Venta no encontrada' }
+
+  const saleItems = (sale.sale_items as { product_id: number; quantity: number; unit_price: number }[]) ?? []
+
+  // Si la venta estaba 'completed' restauramos stock; si ya estaba 'cancelled'
+  // el stock ya fue restaurado por cancelSale y no debemos sumar de nuevo.
+  const restoreFailures: number[] = []
+  if (sale.status === 'completed') {
+    for (const item of saleItems) {
+      const { data: newStock, error: rpcErr } = await supabase.rpc('increment_stock', {
+        p_product_id: item.product_id,
+        p_qty: item.quantity,
+      })
+      if (rpcErr || newStock === null) restoreFailures.push(item.product_id)
+    }
+  }
+
+  // Borrar movimientos de caja vinculados a esta venta (ingreso original
+  // y, si existe, el egreso de anulación). Los movimientos están enlazados
+  // por reference_id = saleId con category in ('venta','anulacion').
+  const { error: cashErr } = await supabase
+    .from('cash_movements')
+    .delete()
+    .eq('reference_id', saleId)
+    .in('category', ['venta', 'anulacion'])
+  if (cashErr) console.error('[delete-sale] failed to delete cash movements', { saleId, error: cashErr.message })
+
+  // Eliminar la venta. sale_items debería caer por cascade FK; si no,
+  // borramos explícitamente como red de seguridad.
+  await supabase.from('sale_items').delete().eq('sale_id', saleId)
+  const { error: delErr } = await supabase.from('sales').delete().eq('id', saleId)
+  if (delErr) return { success: false, error: `Error al eliminar venta: ${delErr.message}` }
+
+  const adminName = profile.full_name ?? user.email ?? user.id
+
+  await logAudit(supabase, user.id, adminName, 'venta_eliminada', 'sale', saleId, {
+    amount: Number(sale.total),
+    description: `Venta #${saleId} eliminada — ${reason.trim()}`,
+    reason: reason.trim(),
+    previous_status: sale.status,
+    payment_method: sale.payment_method,
+    original_created_at: sale.created_at,
+    items: saleItems.map((i) => ({
+      product_id: i.product_id,
+      qty: i.quantity,
+      unit_price: i.unit_price,
+    })),
+    stock_restore_failures: restoreFailures,
+  })
+
+  revalidatePath('/ventas')
+  revalidatePath('/ventas/historial')
+  revalidatePath('/dashboard')
+  revalidatePath('/productos')
+  revalidatePath('/caja')
+  revalidatePath('/auditoria')
+
+  if (restoreFailures.length > 0) {
+    return {
+      success: false,
+      error: `Venta eliminada pero falló restaurar stock para producto(s): ${restoreFailures.join(', ')}. Revisar inventario.`,
+    }
+  }
+
+  return { success: true, saleId }
+}
