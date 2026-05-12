@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { SupabaseClient } from '@supabase/supabase-js'
 
 export type AuditAction =
-  | 'venta_creada' | 'venta_anulada'
+  | 'venta_creada' | 'venta_anulada' | 'venta_eliminada'
   | 'producto_creado' | 'producto_editado'
   | 'inventario_entrada'
   | 'perdida_registrada'
@@ -45,6 +45,7 @@ export type AuditEntry = {
 const ACTION_DESCRIPTIONS: Record<string, string> = {
   venta_creada: 'Venta',
   venta_anulada: 'Anulación',
+  venta_eliminada: 'Venta eliminada',
   producto_creado: 'Producto creado',
   producto_editado: 'Producto editado',
   inventario_entrada: 'Entrada inventario',
