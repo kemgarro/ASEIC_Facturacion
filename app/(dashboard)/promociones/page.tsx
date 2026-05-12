@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { getPromotions } from '@/lib/actions/promotions'
 import { Button } from '@/components/ui/button'
 import { Plus, Pencil } from 'lucide-react'
+import { formatDateCR } from '@/lib/utils'
 
 const TYPE_LABELS: Record<string, string> = {
   pct_discount: '% Descuento',
@@ -67,8 +68,8 @@ export default async function PromocionesPage() {
                 <p className="truncate">Productos: <span className="text-gray-700">{productNames || '—'}</span></p>
                 {(promo.starts_at || promo.ends_at) && (
                   <p>
-                    {promo.starts_at && `Desde ${new Date(promo.starts_at).toLocaleDateString('es-MX')}`}
-                    {promo.ends_at && ` hasta ${new Date(promo.ends_at).toLocaleDateString('es-MX')}`}
+                    {promo.starts_at && `Desde ${formatDateCR(promo.starts_at)}`}
+                    {promo.ends_at && ` hasta ${formatDateCR(promo.ends_at)}`}
                   </p>
                 )}
               </div>

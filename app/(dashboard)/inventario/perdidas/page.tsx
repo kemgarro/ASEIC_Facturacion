@@ -6,6 +6,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import { Plus } from 'lucide-react'
+import { formatDateTimeCR } from '@/lib/utils'
 
 export default async function PerdidasPage() {
   const losses = await getLosses()
@@ -55,7 +56,7 @@ export default async function PerdidasPage() {
                   {l.profiles?.full_name ?? '—'}
                 </TableCell>
                 <TableCell className="text-base text-gray-500">
-                  {new Date(l.created_at).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}
+                  {formatDateTimeCR(l.created_at)}
                 </TableCell>
               </TableRow>
             ))}

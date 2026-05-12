@@ -9,6 +9,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import { TrendingUp, TrendingDown, DollarSign } from 'lucide-react'
+import { formatDateTimeCR } from '@/lib/utils'
 import type { Promotion } from '@/lib/actions/promotions'
 
 type ProductRow = {
@@ -125,7 +126,7 @@ export default async function VentasPage({ searchParams }: PageProps) {
                 <TableRow key={s.id} className="hover:bg-gray-50 transition-colors">
                   <TableCell className="text-base font-medium" style={{ color: '#3b4e73' }}>#{s.id}</TableCell>
                   <TableCell className="text-base text-gray-600">
-                    {new Date(s.created_at).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}
+                    {formatDateTimeCR(s.created_at)}
                   </TableCell>
                   <TableCell className="text-base font-medium" style={{ color: '#023e55' }}>
                     {s.profiles?.full_name ?? '—'}
@@ -239,7 +240,7 @@ export default async function VentasPage({ searchParams }: PageProps) {
                         {m.profiles?.full_name ?? '—'}
                       </TableCell>
                       <TableCell className="text-base text-gray-500">
-                        {new Date(m.created_at).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}
+                        {formatDateTimeCR(m.created_at)}
                       </TableCell>
                     </TableRow>
                   ))}

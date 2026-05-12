@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { getCashMovements, getCashSummary } from '@/lib/actions/cash'
+import { formatDateTimeCR } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -139,7 +140,7 @@ export default async function CajaPage({ searchParams }: PageProps) {
                   {m.profiles?.full_name ?? '—'}
                 </TableCell>
                 <TableCell className="text-base text-gray-500">
-                  {new Date(m.created_at).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}
+                  {formatDateTimeCR(m.created_at)}
                 </TableCell>
               </TableRow>
             ))}

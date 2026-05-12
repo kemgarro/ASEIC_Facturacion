@@ -1,5 +1,6 @@
 import { getAuditLog } from '@/lib/actions/audit'
 import { AUDIT_TYPE_LABELS, AUDIT_TYPE_COLORS, AUDIT_TYPE_FILTER_OPTIONS } from '@/lib/audit/labels'
+import { formatDateTimeCR } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -93,7 +94,7 @@ export default async function AuditoriaPage({ searchParams }: PageProps) {
                   </TableCell>
                   <TableCell className="text-base text-gray-600">{e.user_name}</TableCell>
                   <TableCell className="text-base text-gray-500">
-                    {new Date(e.created_at).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}
+                    {formatDateTimeCR(e.created_at)}
                   </TableCell>
                 </TableRow>
               )

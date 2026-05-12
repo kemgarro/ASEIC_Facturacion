@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { attachProfiles } from '@/lib/supabase/relations'
+import { formatDateTimeCR } from '@/lib/utils'
 import {
   Table,
   TableBody,
@@ -41,10 +42,7 @@ export default async function HistorialPage() {
               <TableRow key={s.id} className="hover:bg-gray-50 transition-colors">
                 <TableCell className="text-base font-medium" style={{ color: '#3b4e73' }}>#{s.id}</TableCell>
                 <TableCell className="text-base text-gray-600">
-                  {new Date(s.created_at).toLocaleString('es-MX', {
-                    dateStyle: 'short',
-                    timeStyle: 'short',
-                  })}
+                  {formatDateTimeCR(s.created_at)}
                 </TableCell>
                 <TableCell className="text-base font-medium" style={{ color: '#023e55' }}>
                   {s.profiles?.full_name ?? '—'}
