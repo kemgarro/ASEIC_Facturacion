@@ -92,34 +92,20 @@ export async function createSale(
 
   if (saleError || !sale) return { success: false, error: saleError?.message ?? 'Error al crear venta' }
 
-  // Decremento de stock con guard atómico: update filtrado por id + stock>=qty.
-  // Si afecta 0 filas, no había stock suficiente. Para concurrencia ideal conviene
-  // mover esto a una RPC Postgres con SELECT FOR UPDATE.
+  // Decremento de stock vía RPC atómica (UPDATE ... WHERE stock >= qty bajo row lock).
+  // Evita race conditions cuando varios cajeros venden el mismo producto a la vez.
   const decremented: { id: number; quantity: number }[] = []
   for (const item of items) {
-    const { data: prod, error: readErr } = await supabase
-      .from('products')
-      .select('stock')
-      .eq('id', item.id)
-      .single()
+    const { data: newStock, error: rpcErr } = await supabase.rpc('decrement_stock', {
+      p_product_id: item.id,
+      p_qty: item.quantity,
+    })
 
-    if (readErr || !prod) {
+    if (rpcErr) {
       await rollbackSale(supabase, sale.id, decremented)
-      return { success: false, error: `Producto no encontrado: ${item.name}` }
+      return { success: false, error: `Error al actualizar stock: ${rpcErr.message}` }
     }
-
-    const { data: applied, error: applyErr } = await supabase
-      .from('products')
-      .update({ stock: prod.stock - item.quantity })
-      .eq('id', item.id)
-      .gte('stock', item.quantity)
-      .select('id')
-
-    if (applyErr) {
-      await rollbackSale(supabase, sale.id, decremented)
-      return { success: false, error: `Error al actualizar stock: ${applyErr.message}` }
-    }
-    if (!applied || applied.length === 0) {
+    if (newStock === null) {
       await rollbackSale(supabase, sale.id, decremented)
       return { success: false, error: `Stock insuficiente para: ${item.name}` }
     }
@@ -180,16 +166,12 @@ async function rollbackSale(
   saleId: number,
   decremented: { id: number; quantity: number }[]
 ) {
-  // Restauramos stock decrementado antes de eliminar la venta huérfana.
   for (const d of decremented) {
-    const { data: prod } = await supabase.from('products').select('stock').eq('id', d.id).single()
-    if (prod) {
-      const { error } = await supabase
-        .from('products')
-        .update({ stock: prod.stock + d.quantity })
-        .eq('id', d.id)
-      if (error) console.error('[rollback] failed to restore stock', { saleId, productId: d.id, error: error.message })
-    }
+    const { error } = await supabase.rpc('increment_stock', {
+      p_product_id: d.id,
+      p_qty: d.quantity,
+    })
+    if (error) console.error('[rollback] failed to restore stock', { saleId, productId: d.id, error: error.message })
   }
   const { error: delErr } = await supabase.from('sales').delete().eq('id', saleId)
   if (delErr) console.error('[rollback] failed to delete sale', { saleId, error: delErr.message })
@@ -234,23 +216,11 @@ export async function cancelSale(saleId: number, reason: string): Promise<SaleRe
   const saleItems = (sale.sale_items as { product_id: number; quantity: number }[]) ?? []
   const restoreFailures: number[] = []
   for (const item of saleItems) {
-    const { data: product, error: readErr } = await supabase
-      .from('products')
-      .select('stock')
-      .eq('id', item.product_id)
-      .single()
-
-    if (readErr || !product) {
-      restoreFailures.push(item.product_id)
-      continue
-    }
-
-    const { error: updErr } = await supabase
-      .from('products')
-      .update({ stock: product.stock + item.quantity })
-      .eq('id', item.product_id)
-
-    if (updErr) restoreFailures.push(item.product_id)
+    const { data: newStock, error: rpcErr } = await supabase.rpc('increment_stock', {
+      p_product_id: item.product_id,
+      p_qty: item.quantity,
+    })
+    if (rpcErr || newStock === null) restoreFailures.push(item.product_id)
   }
 
   const adminName = profile.full_name ?? user.email ?? user.id

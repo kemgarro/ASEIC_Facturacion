@@ -60,20 +60,13 @@ export async function createInventoryEntry(
 
   if (entryError) return { message: `Error: ${entryError.message}` }
 
-  const { data: product } = await supabase
-    .from('products')
-    .select('stock')
-    .eq('id', parsed.data.product_id)
-    .single()
-
-  if (!product) return { message: 'Producto no encontrado' }
-
-  const { error: stockError } = await supabase
-    .from('products')
-    .update({ stock: product.stock + parsed.data.quantity })
-    .eq('id', parsed.data.product_id)
+  const { data: newStock, error: stockError } = await supabase.rpc('increment_stock', {
+    p_product_id: parsed.data.product_id,
+    p_qty: parsed.data.quantity,
+  })
 
   if (stockError) return { message: `Error al actualizar stock: ${stockError.message}` }
+  if (newStock === null) return { message: 'Producto no encontrado' }
 
   const { data: productData } = await supabase
     .from('products').select('name').eq('id', parsed.data.product_id).single()
