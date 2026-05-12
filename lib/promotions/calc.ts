@@ -26,7 +26,7 @@ function getCompletionPosition(promo: Promotion, items: CalcItem[]): number | nu
     return Math.max(...positions)
   }
 
-  if (promo.type === '2x1' || promo.type === 'NxM') {
+  if (promo.type === '2x1' || promo.type === 'NxM' || promo.type === 'bundle') {
     const required = promo.type === '2x1' ? 2 : (promo.buy_qty ?? 0)
     if (required <= 0) return null
     let earliest: number | null = null
@@ -115,6 +115,21 @@ export function calcDiscounts(items: CalcItem[], promotions: Promotion[]): Appli
           discounts.push({ promotionId: promo.id, promotionName: promo.name, amount })
           remaining.set(pid, avail - groups * promo.buy_qty)
         }
+      }
+    }
+
+    if (promo.type === 'bundle' && promo.buy_qty && promo.combo_price) {
+      for (const pid of promoProductIds) {
+        const item = itemMap.get(pid)
+        const avail = remaining.get(pid) ?? 0
+        if (!item) continue
+        const bundles = Math.floor(avail / promo.buy_qty)
+        if (bundles <= 0) continue
+        const savingsPerBundle = promo.buy_qty * item.price - promo.combo_price
+        if (savingsPerBundle <= 0) continue
+        const amount = savingsPerBundle * bundles
+        discounts.push({ promotionId: promo.id, promotionName: promo.name, amount })
+        remaining.set(pid, avail - bundles * promo.buy_qty)
       }
     }
 

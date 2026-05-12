@@ -21,6 +21,7 @@ const TYPE_LABELS: Record<PromotionType, string> = {
   '2x1': '2x1',
   NxM: 'NxM (ej. 3x2)',
   combo: 'Combo (precio especial)',
+  bundle: 'Paquete (N x ₡precio)',
 }
 
 export default function PromotionForm({ action, products, promotion }: PromotionFormProps) {
@@ -108,6 +109,24 @@ export default function PromotionForm({ action, products, promotion }: Promotion
         </div>
       )}
 
+      {type === 'bundle' && (
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="buy_qty">Cantidad por paquete</Label>
+            <Input id="buy_qty" name="buy_qty" type="number" min="2"
+              defaultValue={promotion?.buy_qty ?? 2} placeholder="2" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="combo_price">Precio del paquete (₡)</Label>
+            <Input id="combo_price" name="combo_price" type="number" step="0.01" min="0"
+              defaultValue={promotion?.combo_price ?? ''} placeholder="1200" />
+          </div>
+          <p className="col-span-2 text-xs text-gray-500">
+            Ej. 2 reposterías × ₡1200. Si el cliente lleva varias unidades del mismo producto seleccionado, se aplica un paquete por cada N unidades.
+          </p>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="starts_at">Fecha inicio</Label>
@@ -138,6 +157,8 @@ export default function PromotionForm({ action, products, promotion }: Promotion
         <p className="text-xs text-gray-500">
           {type === 'combo'
             ? 'Selecciona todos los productos que forman el combo.'
+            : type === 'bundle'
+            ? 'Selecciona los productos a los que aplica el paquete. Cada producto se evalúa por separado.'
             : 'Selecciona los productos a los que aplica esta promoción.'}
         </p>
         <div className="border rounded-xl p-3 max-h-56 overflow-y-auto space-y-1">

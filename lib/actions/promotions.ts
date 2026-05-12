@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 
-export type PromotionType = 'pct_discount' | 'fixed_discount' | '2x1' | 'NxM' | 'combo'
+export type PromotionType = 'pct_discount' | 'fixed_discount' | '2x1' | 'NxM' | 'combo' | 'bundle'
 
 export type Promotion = {
   id: number
@@ -28,7 +28,7 @@ export type PromotionState = {
 
 const PromotionSchema = z.object({
   name: z.string().min(1, 'Nombre requerido'),
-  type: z.enum(['pct_discount', 'fixed_discount', '2x1', 'NxM', 'combo']),
+  type: z.enum(['pct_discount', 'fixed_discount', '2x1', 'NxM', 'combo', 'bundle']),
   value: z.coerce.number().optional().nullable(),
   buy_qty: z.coerce.number().int().optional().nullable(),
   pay_qty: z.coerce.number().int().optional().nullable(),
